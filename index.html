@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>닥터스탁 AI 리더보드</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161b22; --panel2:#1c232c; --line:#262e39;
+  --text:#e6edf3; --muted:#8b97a5; --up:#ff5b5b; --down:#4f9bff; --accent:#f5b83d;
+  --gold:#f5b83d; --silver:#b8c2cc; --bronze:#d08a5a;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f4f6f9; --panel:#ffffff; --panel2:#f0f3f7; --line:#e1e6ec;
+         --text:#1b2330; --muted:#667385; --up:#e03a3a; --down:#2c6fd6; --accent:#c98a00;
+         --gold:#d9980b; --silver:#8e9aa7; --bronze:#b36f3f; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.45 -apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{margin:0;font-size:22px;letter-spacing:-.3px}
+h1 small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:4px;letter-spacing:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat .l{font-size:12px;color:var(--muted)}
+.stat .v{font-size:21px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.grp{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.grp button{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:7px;
+  font:inherit;font-size:13.5px;cursor:pointer}
+.grp button.on{background:var(--panel2);color:var(--text);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.grp button:hover{color:var(--text)}
+.sp{flex:1}
+input[type=search]{background:var(--panel);border:1px solid var(--line);color:var(--text);
+  border-radius:10px;padding:8px 12px;font:inherit;font-size:13.5px;width:170px}
+.board{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.head,.row{display:grid;align-items:center;gap:10px;padding:0 16px;
+  grid-template-columns:44px minmax(150px,1.5fr) 96px minmax(140px,1.2fr) minmax(120px,1fr) 84px 84px}
+.head{height:38px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.head span.r,.row .r{text-align:right}
+.row{min-height:64px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;transition:background .12s}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--panel2)}
+.rank{font-size:17px;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.rank.m{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;color:#161b22}
+.rank.g1{background:var(--gold)} .rank.g2{background:var(--silver)} .rank.g3{background:var(--bronze)}
+.nm b{font-size:15.5px}
+.nm .sub{font-size:12px;color:var(--muted);margin-top:1px}
+.tag{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:1px;
+  border:1px solid var(--line);color:var(--muted)}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.num small{display:block;font-size:11.5px;color:var(--muted)}
+.gauge{position:relative;height:8px;background:var(--panel2);border-radius:4px;margin-top:6px}
+.gauge i{position:absolute;top:0;bottom:0;border-radius:4px}
+.gauge:after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted);opacity:.6}
+.gl{font-size:13px;font-variant-numeric:tabular-nums;display:flex;justify-content:space-between}
+.amt .t{height:6px;background:var(--panel2);border-radius:3px;margin-top:6px}
+.amt .t i{display:block;height:100%;background:var(--accent);border-radius:3px;opacity:.85}
+.up{color:var(--up)} .dn{color:var(--down)} .mu{color:var(--muted)}
+.ret{font-weight:700}
+.empty{padding:48px 16px;text-align:center;color:var(--muted)}
+.foot{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .head{display:none}
+  .row{grid-template-columns:36px 1fr auto;grid-template-areas:"rk nm rt" "rk gg gg" "rk am am";padding:12px 14px;row-gap:6px}
+  .row>.rank{grid-area:rk;align-self:start;margin-top:4px}
+  .row>.nm{grid-area:nm}
+  .row>.c-price,.row>.c-fn{display:none}
+  .row>.c-gap{grid-area:gg}
+  .row>.c-amt{grid-area:am}
+  .row>.c-ret{grid-area:rt}
+  input[type=search]{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🤖 닥터스탁 AI 리더보드<small id="gen"></small></h1>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="l">포착 종목</div><div class="v" id="s1">-</div></div>
+    <div class="stat"><div class="l">평균 거래대금</div><div class="v" id="s2">-</div></div>
+    <div class="stat"><div class="l">평균 기준선 괴리</div><div class="v" id="s3">-</div></div>
+    <div class="stat"><div class="l">평균 포착 후 수익률</div><div class="v" id="s4">-</div></div>
+  </div>
+
+  <div class="bar">
+    <div class="grp" id="gSort">
+      <button data-v="amount" class="on">거래대금순</button>
+      <button data-v="near">기준선 근접순</button>
+      <button data-v="ret">수익률순</button>
+      <button data-v="new">최신순</button>
+    </div>
+    <div class="grp" id="gRange">
+      <button data-v="1" class="on">최근 포착일</button>
+      <button data-v="7">7일</button>
+      <button data-v="30">30일</button>
+      <button data-v="0">전체</button>
+    </div>
+    <div class="grp" id="gMkt">
+      <button data-v="" class="on">전체</button>
+      <button data-v="KOSPI">KOSPI</button>
+      <button data-v="KOSDAQ">KOSDAQ</button>
+    </div>
+    <div class="sp"></div>
+    <input type="search" id="q" placeholder="종목명·코드 검색">
+  </div>
+
+  <div class="board">
+    <div class="head">
+      <span>#</span><span>종목</span><span class="r">포착가</span>
+      <span>기준선 괴리 (±6%)</span><span>거래대금</span><span class="r">외인(추정)</span><span class="r">수익률</span>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="foot">
+    · 행을 누르면 네이버 금융 종목 페이지가 열립니다.<br>
+    · 수익률 = 포착일 종가 대비 최신 종가. 시세 조회를 끈 경우 '-'로 표시됩니다.<br>
+    · 외인(추정)은 스캐너가 거래대금의 2%로 가정한 값이라 실제 외국인 수급이 아닙니다.
+  </div>
+</div>
+
+<script>
+const DATA = [{"date": "2026-11-10", "code": "389260", "name": "대명에너지", "market": "KOSDAQ", "price": 15170, "kijun": 16000, "diff": -5.19, "amount_eok": 365.6, "foreign_net": 7.31, "id": 5, "ret": -0.2, "last": 15140}, {"date": "2026-11-10", "code": "282720", "name": "금양그린파워", "market": "KOSDAQ", "price": 9650, "kijun": 9600, "diff": 0.52, "amount_eok": 531.9, "foreign_net": 10.64, "id": 4, "ret": -4.35, "last": 9230}, {"date": "2026-10-29", "code": "170920", "name": "엘티씨", "market": "KOSDAQ", "price": 40850, "kijun": 43300, "diff": -5.66, "amount_eok": 121.8, "foreign_net": 2.44, "id": 3, "ret": -27.66, "last": 29550}, {"date": "2026-10-29", "code": "353200", "name": "대덕전자", "market": "KOSPI", "price": 140200, "kijun": 134900, "diff": 3.93, "amount_eok": 1671.9, "foreign_net": 33.44, "id": 2, "ret": -42.58, "last": 80500}, {"date": "2026-10-29", "code": "000810", "name": "삼성화재", "market": "KOSPI", "price": 629000, "kijun": 607200, "diff": 3.59, "amount_eok": 672.7, "foreign_net": 13.45, "id": 1, "ret": -4.77, "last": 599000}];
+const GENERATED = "2026-11-10 15:02";
+const st = {sort:"amount", range:"1", mkt:"", q:""};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Number(n).toLocaleString("ko-KR");
+const sgn = (n, d=2) => (n>0?"+":"") + Number(n).toFixed(d);
+const cls = n => n>0 ? "up" : n<0 ? "dn" : "mu";
+const eok = v => v>=10000 ? (v/10000).toFixed(2)+"조" : fmt(Math.round(v))+"억";
+
+$("gen").textContent = "생성 " + GENERATED + " · 누적 포착 " + DATA.length + "건";
+
+function dates(){ return [...new Set(DATA.map(d=>d.date))].sort().reverse(); }
+
+function filtered(){
+  let rows = DATA.slice();
+  const ds = dates();
+  if (st.range === "1" && ds.length) rows = rows.filter(r => r.date === ds[0]);
+  else if (st.range !== "0"){
+    const lim = new Date(); lim.setDate(lim.getDate() - Number(st.range));
+    const limS = lim.toISOString().slice(0,10);
+    rows = rows.filter(r => r.date >= limS);
+  }
+  if (st.mkt) rows = rows.filter(r => r.market === st.mkt);
+  if (st.q){ const q = st.q.toLowerCase(); rows = rows.filter(r => r.name.toLowerCase().includes(q) || r.code.includes(q)); }
+  const by = {
+    amount: (a,b)=> b.amount_eok - a.amount_eok,
+    near:   (a,b)=> Math.abs(a.diff) - Math.abs(b.diff),
+    ret:    (a,b)=> (b.ret ?? -1e9) - (a.ret ?? -1e9),
+    new:    (a,b)=> b.date.localeCompare(a.date) || b.id - a.id
+  }[st.sort];
+  return rows.sort(by);
+}
+
+function render(){
+  const rows = filtered();
+  const maxAmt = Math.max(1, ...rows.map(r=>r.amount_eok));
+
+  $("s1").textContent = rows.length + "개";
+  $("s2").textContent = rows.length ? eok(rows.reduce((s,r)=>s+r.amount_eok,0)/rows.length) : "-";
+  $("s3").textContent = rows.length ? sgn(rows.reduce((s,r)=>s+r.diff,0)/rows.length) + "%" : "-";
+  const rr = rows.filter(r=>r.ret!=null);
+  const a4 = $("s4");
+  if (rr.length){ const m = rr.reduce((s,r)=>s+r.ret,0)/rr.length; a4.textContent = sgn(m)+"%"; a4.className = "v "+cls(m); }
+  else { a4.textContent = "-"; a4.className = "v"; }
+
+  if (!rows.length){ $("rows").innerHTML = '<div class="empty">조건에 맞는 포착 종목이 없습니다.</div>'; return; }
+
+  $("rows").innerHTML = rows.map((r,i)=>{
+    const n = i+1;
+    const rk = n<=3 ? `<div class="rank m g${n}">${n}</div>` : `<div class="rank">${n}</div>`;
+    const w = Math.min(Math.abs(r.diff)/6,1)*50;
+    const bar = r.diff>=0 ? `left:50%;width:${w}%;background:var(--up)` : `left:${50-w}%;width:${w}%;background:var(--down)`;
+    const ret = r.ret==null ? '<span class="mu">-</span>' : `<span class="ret ${cls(r.ret)}">${sgn(r.ret)}%</span>`;
+    return `<a class="row" href="https://finance.naver.com/item/main.naver?code=${esc(r.code)}" target="_blank" rel="noopener">
+      ${rk}
+      <div class="nm"><b>${esc(r.name)}</b><span class="tag">${esc(r.market)}</span>
+        <div class="sub">${esc(r.code)} · ${esc(r.date)}</div></div>
+      <div class="num c-price">${fmt(r.price)}<small>기준선 ${fmt(r.kijun)}</small></div>
+      <div class="c-gap"><div class="gl"><span class="${cls(r.diff)}">${sgn(r.diff)}%</span></div><div class="gauge"><i style="${bar}"></i></div></div>
+      <div class="amt c-amt"><div class="gl"><span>${eok(r.amount_eok)}</span></div><div class="t"><i style="width:${(r.amount_eok/maxAmt*100).toFixed(1)}%"></i></div></div>
+      <div class="num c-fn mu">+${Number(r.foreign_net).toFixed(1)}억</div>
+      <div class="num c-ret">${ret}</div>
+    </a>`;
+  }).join("");
+}
+
+function wire(id, key){
+  $(id).addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    st[key] = b.dataset.v;
+    [...$(id).children].forEach(x=>x.classList.toggle("on", x===b));
+    render();
+  });
+}
+wire("gSort","sort"); wire("gRange","range"); wire("gMkt","mkt");
+$("q").addEventListener("input", e=>{ st.q = e.target.value.trim(); render(); });
+render();
+</script>
+</body>
+</html>
